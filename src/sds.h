@@ -30,20 +30,28 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * #ifndef: 如果定义了指定的宏，则编译下面的代码块，否则编译并执行下面的代码块。
+ * #define: 定义一个宏，如果这个宏之前未被定义过，那么执行下面的代码块。
+ * #endif: 结束条件编译块。
+ * 总而言之就是保证这段代码只编译一次。
+ */
 #ifndef __SDS_H
 #define __SDS_H
 
+
 #define SDS_MAX_PREALLOC (1024*1024)
-extern const char *SDS_NOINIT;
+extern const char *SDS_NOINIT; // 声明一个变量
 
 #include <sys/types.h>
-#include <stdarg.h>
-#include <stdint.h>
+#include <stdarg.h> // 
+#include <stdint.h> // 定义了一些精准位的int
 
-typedef char *sds;
+typedef char *sds; // sds -> char *
 
 /* Note: sdshdr5 is never used, we just access the flags byte directly.
  * However is here to document the layout of type 5 SDS strings. */
+/*  __attribute__ ((__packed__)) 禁止编译器内存对齐，这样可以使用短长度的len和alloc*/
 struct __attribute__ ((__packed__)) sdshdr5 {
     unsigned char flags; /* 3 lsb of type, and 5 msb of string length */
     char buf[];
@@ -80,6 +88,7 @@ struct __attribute__ ((__packed__)) sdshdr64 {
 #define SDS_TYPE_64 4
 #define SDS_TYPE_MASK 7
 #define SDS_TYPE_BITS 3
+// s向前移动T字节, ##T会根据T的类型动态生成，sdshdr8 sdshdr16 sdshdr32 sdshdr64
 #define SDS_HDR_VAR(T,s) struct sdshdr##T *sh = (void*)((s)-(sizeof(struct sdshdr##T)));
 #define SDS_HDR(T,s) ((struct sdshdr##T *)((s)-(sizeof(struct sdshdr##T))))
 #define SDS_TYPE_5_LEN(f) ((f)>>SDS_TYPE_BITS)
@@ -102,6 +111,7 @@ static inline size_t sdslen(const sds s) {
 }
 
 static inline size_t sdsavail(const sds s) {
+    // 取s的前一个内存未知，也就获取到flag1了
     unsigned char flags = s[-1];
     switch(flags&SDS_TYPE_MASK) {
         case SDS_TYPE_5: {
@@ -268,7 +278,7 @@ void *sds_realloc(void *ptr, size_t size);
 void sds_free(void *ptr);
 
 #ifdef REDIS_TEST
-int sdsTest(int argc, char *argv[]);
+int (int argc, char *argv[]);
 #endif
 
 #endif
